@@ -1,6 +1,6 @@
+/* eslint-disable camelcase */
 import { filter } from 'lodash';
 import { Icon } from '@iconify/react';
-import { sentenceCase } from 'change-case';
 import { useEffect, useState } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
 import { Link as RouterLink } from 'react-router-dom';
@@ -18,26 +18,28 @@ import {
   Container,
   Typography,
   TableContainer,
-  TablePagination
+  TablePagination,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  DialogContentText,
+  DialogContent,
+  TextField
 } from '@mui/material';
 // components
+import { Formik, Form, Field } from 'formik';
 import Page from '../components/Page';
-import Label from '../components/Label';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
-//
-import USERLIST from '../_mocks_/user';
-
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'company', label: 'Company', alignRight: false },
-  { id: 'role', label: 'Role', alignRight: false },
-  { id: 'isVerified', label: 'Verified', alignRight: false },
-  { id: 'status', label: 'Status', alignRight: false },
-  { id: '' }
+  { id: 'name', label: 'Nombre usuario', alignRight: false },
+  { id: 'document', label: 'Cedula', alignRight: false },
+  { id: 'email', label: 'Correo', alignRight: false },
+  { id: 'user', label: 'Usuario', alignRight: false },
+  { id: 'password', label: 'Contraseña', alignRight: false }
 ];
 
 // ----------------------------------------------------------------------
@@ -66,7 +68,10 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    return filter(
+      array,
+      (_user) => _user.nombre_usuario.toLowerCase().indexOf(query.toLowerCase()) !== -1
+    );
   }
   return stabilizedThis.map((el) => el[0]);
 }
@@ -78,25 +83,34 @@ export default function User() {
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
   const [usuarios, setUsuarios] = useState([]);
-  const handleRequestSort = (event, property) => {
+
+  useEffect(() => {
+    const users = () => {
+      const requestOptions = {
+        method: 'GET'
+      };
+
+      fetch(
+        'http://backendciclo3-env.eba-spqtp9c2.us-east-1.elasticbeanstalk.com/usuarios/listar',
+        requestOptions
+      )
+        .then((res) => res.json())
+        .then((result) => setUsuarios(result))
+        .catch((error) => console.log('error', error));
+    };
+    users();
+  }, []);
+
+  const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
-  useEffect(() => {
-    const users = async () => {
-      const data = await fetch('http://localhost:5000/usuarios/listar');
-      const res = await data.json();
-      console.log(res);
-      return res;
-    };
-    setUsuarios(users());
-  }, []);
+
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = USERLIST.map((n) => n.name);
+      const newSelecteds = usuarios.map((n) => n.nombre_usuario);
       setSelected(newSelecteds);
       return;
     }
@@ -121,7 +135,7 @@ export default function User() {
     setSelected(newSelected);
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
@@ -134,27 +148,126 @@ export default function User() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - usuarios.length) : 0;
 
-  const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(usuarios, getComparator(order, orderBy), filterName);
 
   const isUserNotFound = filteredUsers.length === 0;
 
+  const [open, setOpen] = useState(false);
+  const handleClickOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
-    <Page title="User | Minimal-UI">
+    <Page title="Usuarios | Proyecto MinTic">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            Lista de Usuarios
           </Typography>
           <Button
             variant="contained"
             component={RouterLink}
+            onClick={handleClickOpen}
             to="#"
             startIcon={<Icon icon={plusFill} />}
           >
-            New User
+            Crear usuarios
           </Button>
+          <Dialog open={open} onClose={handleClose}>
+            <DialogTitle>Agregar Usuario</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Para agregar un usuario diligencie todos los campos para poder enviar los datos de
+                manera correcta
+              </DialogContentText>
+              <Formik
+                initialValues={{
+                  cedula_usuario: '',
+                  email_usuario: '',
+                  nombre_usuario: '',
+                  password: '',
+                  usuario: ''
+                }}
+                onSubmit={(values, { setSubmitting }) => {
+                  console.log(values);
+                  const myHeaders = new Headers();
+                  myHeaders.append('Content-Type', 'application/json');
+
+                  const requestOptions = {
+                    method: 'POST',
+                    Headers: myHeaders,
+                    cors: 'cors',
+                    body: values
+                  };
+
+                  fetch(
+                    'http://backendciclo3-env.eba-spqtp9c2.us-east-1.elasticbeanstalk.com/usuarios/guardar',
+                    requestOptions
+                  )
+                    .then((res) => res.text())
+                    .then((result) => {
+                      setSubmitting(false);
+                      console.log(result);
+                    })
+                    .catch((error) => console.log('error', error));
+                }}
+              >
+                {({ submitForm, isSubmitting }) => (
+                  <Form>
+                    <Stack mt={2}>
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        name="cedula_usuario"
+                        type="number"
+                        label="Cedula"
+                      />
+                      <br />
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        type="text"
+                        label="Nombre usuario"
+                        name="nombre_usuario"
+                      />
+                      <br />
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        type="email"
+                        label="Email"
+                        name="email_usuario"
+                      />
+                      <br />
+                      <Field as={TextField} fullWidth type="text" label="Usuario" name="usuario" />
+                      <br />
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        type="password"
+                        label="Contraseña"
+                        name="password"
+                      />
+                    </Stack>
+                    <Stack gap={2} mt={3}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        disabled={isSubmitting}
+                        onClick={submitForm}
+                      >
+                        Agregar
+                      </Button>
+                      <Button fullWidth variant="contained" color="error" onClick={handleClose}>
+                        Cancelar
+                      </Button>
+                    </Stack>
+                  </Form>
+                )}
+              </Formik>
+            </DialogContent>
+          </Dialog>
         </Stack>
 
         <Card>
@@ -163,7 +276,6 @@ export default function User() {
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
-
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
@@ -171,7 +283,7 @@ export default function User() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={USERLIST.length}
+                  rowCount={usuarios.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
@@ -179,14 +291,15 @@ export default function User() {
                 <TableBody>
                   {filteredUsers
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => {
-                      const { id, name, role, status, company, avatarUrl, isVerified } = row;
-                      const isItemSelected = selected.indexOf(name) !== -1;
+                    .map((row, index) => {
+                      const { nombre_usuario, email_usuario, password, usuario, cedula_usuario } =
+                        row;
+                      const isItemSelected = selected.indexOf(nombre_usuario) !== -1;
 
                       return (
                         <TableRow
                           hover
-                          key={id}
+                          key={index}
                           tabIndex={-1}
                           role="checkbox"
                           selected={isItemSelected}
@@ -195,31 +308,47 @@ export default function User() {
                           <TableCell padding="checkbox">
                             <Checkbox
                               checked={isItemSelected}
-                              onChange={(event) => handleClick(event, name)}
+                              onChange={(event) => handleClick(event, nombre_usuario)}
                             />
                           </TableCell>
                           <TableCell component="th" scope="row" padding="none">
                             <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar alt={name} src={avatarUrl} />
+                              <Avatar
+                                alt={nombre_usuario}
+                                src="https://randomuser.me/api/portraits/women/28.jpg"
+                              />
                               <Typography variant="subtitle2" noWrap>
-                                {name}
+                                {nombre_usuario}
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="left">{company}</TableCell>
-                          <TableCell align="left">{role}</TableCell>
-                          <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
-                          <TableCell align="left">
-                            <Label
-                              variant="ghost"
-                              color={(status === 'banned' && 'error') || 'success'}
-                            >
-                              {sentenceCase(status)}
-                            </Label>
-                          </TableCell>
-
+                          <TableCell align="left">{cedula_usuario}</TableCell>
+                          <TableCell align="left">{email_usuario}</TableCell>
+                          <TableCell align="left">{usuario}</TableCell>
+                          <TableCell align="left">{password}</TableCell>
                           <TableCell align="right">
-                            <UserMoreMenu />
+                            <UserMoreMenu
+                              onEdit={() => alert(cedula_usuario)}
+                              onDelete={() => {
+                                const headers = new Headers();
+
+                                headers.append('Content-Type', 'application/json');
+                                headers.append('Accept', 'application/json');
+
+                                headers.append('Origin', 'http://localhost:3000');
+                                const requestOptions = {
+                                  method: 'DELETE',
+                                  headers: Headers
+                                };
+                                fetch(
+                                  `http://backendciclo3-env.eba-spqtp9c2.us-east-1.elasticbeanstalk.com/usuarios/eliminar/${cedula_usuario}`,
+                                  requestOptions
+                                )
+                                  .then((res) => res.text())
+                                  .then((res) => console.log(res))
+                                  .catch((err) => console.log(err));
+                              }}
+                            />
                           </TableCell>
                         </TableRow>
                       );
@@ -242,11 +371,10 @@ export default function User() {
               </Table>
             </TableContainer>
           </Scrollbar>
-
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={USERLIST.length}
+            count={usuarios.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
