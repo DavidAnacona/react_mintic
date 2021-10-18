@@ -2,7 +2,6 @@ import { Icon } from '@iconify/react';
 import PropTypes from 'prop-types';
 import { useRef, useState } from 'react';
 import editFill from '@iconify/icons-eva/edit-fill';
-import { Link as RouterLink } from 'react-router-dom';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 // material
@@ -12,30 +11,43 @@ export default function UserMoreMenu({ onEdit, onDelete }) {
   const ref = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleDelete = () => {
+    onDelete();
+    setIsOpen(false);
+  };
+
+  const handleEdit = () => {
+    onEdit();
+    setIsOpen(false);
+  };
+
+  const handleClose = () => setIsOpen(false);
+  const handleOpen = () => setIsOpen(true);
+
   return (
     <>
-      <IconButton ref={ref} onClick={() => setIsOpen(true)}>
+      <IconButton ref={ref} onClick={handleOpen}>
         <Icon icon={moreVerticalFill} width={20} height={20} />
       </IconButton>
 
       <Menu
         open={isOpen}
         anchorEl={ref.current}
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
         PaperProps={{
           sx: { width: 200, maxWidth: '100%' }
         }}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem sx={{ color: 'text.secondary' }} onClick={onDelete}>
+        <MenuItem sx={{ color: 'red' }} onClick={handleDelete}>
           <ListItemIcon>
             <Icon icon={trash2Outline} width={24} height={24} />
           </ListItemIcon>
           <ListItemText primary="Eliminar" primaryTypographyProps={{ variant: 'body2' }} />
         </MenuItem>
 
-        <MenuItem component={RouterLink} to="#" sx={{ color: 'text.secondary' }} onClick={onEdit}>
+        <MenuItem sx={{ color: 'text.secondary' }} onClick={handleEdit}>
           <ListItemIcon>
             <Icon icon={editFill} width={24} height={24} />
           </ListItemIcon>

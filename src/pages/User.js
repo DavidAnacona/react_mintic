@@ -3,30 +3,23 @@ import { filter } from 'lodash';
 import { Icon } from '@iconify/react';
 import { useEffect, useState } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
-import { Link as RouterLink } from 'react-router-dom';
 // material
 import {
   Card,
   Table,
   Stack,
-  Avatar,
   Button,
-  Checkbox,
   TableRow,
   TableBody,
   TableCell,
   Container,
   Typography,
   TableContainer,
-  TablePagination,
-  Dialog,
-  DialogTitle,
-  DialogContentText,
-  DialogContent,
-  TextField
+  TablePagination
 } from '@mui/material';
 // components
-import { Formik, Form, Field } from 'formik';
+import { useSnackbar } from 'notistack';
+import FormUser from '../components/_dashboard/user/FormUser';
 import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
@@ -78,11 +71,12 @@ function applySortFilter(array, comparator, query) {
 export default function User() {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
-  const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [usuarios, setUsuarios] = useState([]);
+
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const users = () => {
@@ -104,33 +98,6 @@ export default function User() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = usuarios.map((n) => n.nombre_usuario);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const handleChangePage = (newPage) => {
     setPage(newPage);
   };
@@ -150,9 +117,135 @@ export default function User() {
 
   const isUserNotFound = filteredUsers.length === 0;
 
-  const [open, setOpen] = useState(false);
-  const handleClickOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  // Modals
+  const [openCreate, setOpenCreate] = useState(false);
+  const handleOpenCreate = () => setOpenCreate(true);
+  const handleCloseCreate = () => setOpenCreate(false);
+
+  const [openEdit, setOpenEdit] = useState(false);
+  const handleOpenEdit = () => setOpenEdit(true);
+  const handleCloseEdit = () => setOpenEdit(false);
+
+  const [editData, setEditData] = useState([]);
+
+  // CRUD methods
+  const myHeaders = new Headers();
+  myHeaders.append('Content-Type', 'application/json');
+
+  const handleCreateUser = async (values) => {
+    const raw = JSON.stringify({
+      ...values
+    });
+
+    const requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+
+    try {
+      const res = await fetch(
+        'https://ciclo3-mintic-back.herokuapp.com/usuarios/guardar/',
+        requestOptions
+      );
+      const data = await res.json();
+
+      if (data.mensaje === 'Ya existe un usuario con la cedula ingresada') {
+        enqueueSnackbar(data.mensaje, {
+          variant: 'error'
+        });
+        handleCloseCreate();
+      } else {
+        setUsuarios([...usuarios, values]);
+        handleCloseCreate();
+        enqueueSnackbar(data.mensaje, {
+          variant: 'success'
+        });
+      }
+    } catch (err) {
+      enqueueSnackbar('Usuario NO creado', {
+        variant: 'error'
+      });
+      console.log('error', err);
+    }
+  };
+  const handleEditUser = (values) => {
+    const raw = JSON.stringify({
+      ...values
+    });
+
+    const requestOptions = {
+      headers: myHeaders,
+      method: 'PUT',
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch(
+      `https://ciclo3-mintic-back.herokuapp.com/usuarios/actualizar/${values?.cedula_usuario}`,
+      requestOptions
+    )
+      .then((response) => response.text())
+      .then(() => {
+        enqueueSnackbar('Usuario editado con exito', {
+          variant: 'success'
+        });
+        setUsuarios([
+          ...usuarios.filter((i) => i.cedula_usuario !== values.cedula_usuario),
+          values
+        ]);
+        handleCloseEdit();
+      })
+      .catch((error) => {
+        enqueueSnackbar('Usuario NO editado', {
+          variant: 'error'
+        });
+        console.log('error', error);
+      });
+  };
+  const handleDetailUser = (cedula_usuario) => {
+    const requestOptions = {
+      method: 'GET'
+    };
+    fetch(
+      `https://ciclo3-mintic-back.herokuapp.com/usuarios/detalle/${cedula_usuario}`,
+      requestOptions
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        setEditData(res);
+        handleOpenEdit();
+      })
+      .catch((err) => {
+        enqueueSnackbar('NO se puede listar informacion del usuario', {
+          variant: 'error'
+        });
+        console.log(err);
+      });
+  };
+  const handleDeleteUser = (cedula_usuario) => {
+    const requestOptions = {
+      method: 'DELETE'
+    };
+    fetch(
+      `https://ciclo3-mintic-back.herokuapp.com/usuarios/eliminar/${cedula_usuario}`,
+      requestOptions
+    )
+      .then((res) => res.text())
+      .then(() => {
+        enqueueSnackbar('Usuario eliminado con exito', {
+          variant: 'success'
+        });
+        setUsuarios(usuarios.filter((i) => i.cedula_usuario !== cedula_usuario));
+      })
+      .catch((err) => {
+        enqueueSnackbar('Usuario NO eliminado', {
+          variant: 'error'
+        });
+        console.log(err);
+      });
+  };
 
   return (
     <Page title="Usuarios | Proyecto MinTic">
@@ -163,115 +256,15 @@ export default function User() {
           </Typography>
           <Button
             variant="contained"
-            component={RouterLink}
-            onClick={handleClickOpen}
-            to="#"
+            onClick={handleOpenCreate}
             startIcon={<Icon icon={plusFill} />}
           >
             Crear usuarios
           </Button>
-          <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Agregar Usuario</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Para agregar un usuario diligencie todos los campos para poder enviar los datos de
-                manera correcta
-              </DialogContentText>
-              <Formik
-                initialValues={{
-                  cedula_usuario: '',
-                  email_usuario: '',
-                  nombre_usuario: '',
-                  password: '',
-                  usuario: ''
-                }}
-                onSubmit={(values, { setSubmitting }) => {
-                  const myHeaders = new Headers();
-                  myHeaders.append('Content-Type', 'application/json');
-
-                  const raw = JSON.stringify({
-                    ...values
-                  });
-
-                  const requestOptions = {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: raw,
-                    redirect: 'follow'
-                  };
-
-                  fetch(
-                    'https://ciclo3-mintic-back.herokuapp.com/usuarios/guardar/',
-                    requestOptions
-                  )
-                    .then((response) => response.text())
-                    .then((result) => console.log(result))
-                    .catch((error) => console.log('error', error));
-                }}
-              >
-                {({ submitForm, isSubmitting }) => (
-                  <Form>
-                    <Stack mt={2}>
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        name="cedula_usuario"
-                        type="number"
-                        label="Cedula"
-                      />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="text"
-                        label="Nombre usuario"
-                        name="nombre_usuario"
-                      />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="email"
-                        label="Email"
-                        name="email_usuario"
-                      />
-                      <br />
-                      <Field as={TextField} fullWidth type="text" label="Usuario" name="usuario" />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="password"
-                        label="Contraseña"
-                        name="password"
-                      />
-                    </Stack>
-                    <Stack gap={2} mt={3}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        disabled={isSubmitting}
-                        onClick={submitForm}
-                      >
-                        Agregar
-                      </Button>
-                      <Button fullWidth variant="contained" color="error" onClick={handleClose}>
-                        Cancelar
-                      </Button>
-                    </Stack>
-                  </Form>
-                )}
-              </Formik>
-            </DialogContent>
-          </Dialog>
+          <FormUser open={openCreate} onClose={handleCloseCreate} onSubmit={handleCreateUser} />
         </Stack>
-
         <Card>
-          <UserListToolbar
-            numSelected={selected.length}
-            filterName={filterName}
-            onFilterName={handleFilterByName}
-          />
+          <UserListToolbar filterName={filterName} onFilterName={handleFilterByName} />
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
@@ -280,9 +273,7 @@ export default function User() {
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
                   rowCount={usuarios.length}
-                  numSelected={selected.length}
                   onRequestSort={handleRequestSort}
-                  onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
                   {filteredUsers
@@ -290,29 +281,11 @@ export default function User() {
                     .map((row, index) => {
                       const { nombre_usuario, email_usuario, password, usuario, cedula_usuario } =
                         row;
-                      const isItemSelected = selected.indexOf(nombre_usuario) !== -1;
 
                       return (
-                        <TableRow
-                          hover
-                          key={index}
-                          tabIndex={-1}
-                          role="checkbox"
-                          selected={isItemSelected}
-                          aria-checked={isItemSelected}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={isItemSelected}
-                              onChange={(event) => handleClick(event, nombre_usuario)}
-                            />
-                          </TableCell>
+                        <TableRow hover key={index} tabIndex={-1}>
                           <TableCell component="th" scope="row" padding="none">
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar
-                                alt={nombre_usuario}
-                                src="https://randomuser.me/api/portraits/women/28.jpg"
-                              />
+                            <Stack direction="row" alignItems="center" spacing={2} mx={2}>
                               <Typography variant="subtitle2" noWrap>
                                 {nombre_usuario}
                               </Typography>
@@ -323,27 +296,15 @@ export default function User() {
                           <TableCell align="left">{usuario}</TableCell>
                           <TableCell align="left">{password}</TableCell>
                           <TableCell align="right">
+                            <FormUser
+                              open={openEdit}
+                              onClose={handleCloseEdit}
+                              onSubmit={handleEditUser}
+                              initialValues={editData}
+                            />
                             <UserMoreMenu
-                              onEdit={() => alert(cedula_usuario)}
-                              onDelete={() => {
-                                const headers = new Headers();
-
-                                headers.append('Content-Type', 'application/json');
-                                headers.append('Accept', 'application/json');
-
-                                headers.append('Origin', 'http://localhost:3000');
-                                const requestOptions = {
-                                  method: 'DELETE',
-                                  headers: Headers
-                                };
-                                fetch(
-                                  `https://ciclo3-mintic-back.herokuapp.com/usuarios/eliminar/${cedula_usuario}`,
-                                  requestOptions
-                                )
-                                  .then((res) => res.text())
-                                  .then((res) => console.log(res))
-                                  .catch((err) => console.log(err));
-                              }}
+                              onEdit={() => handleDetailUser(cedula_usuario)}
+                              onDelete={() => handleDeleteUser(cedula_usuario)}
                             />
                           </TableCell>
                         </TableRow>
