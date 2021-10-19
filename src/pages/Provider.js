@@ -25,22 +25,20 @@ import {
   DialogContent,
   TextField
 } from '@mui/material';
-
 // components
 import { Formik, Form, Field } from 'formik';
 import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
-
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Nombre usuario', alignRight: false },
-  { id: 'document', label: 'Cedula', alignRight: false },
-  { id: 'email', label: 'Correo', alignRight: false },
-  { id: 'user', label: 'Usuario', alignRight: false },
-  { id: 'password', label: 'Contraseña', alignRight: false }
+  { id: 'name', label: 'Nombre proveedor', alignRight: false },
+  { id: 'nit', label: 'Nit', alignRight: false },
+  { id: 'city', label: 'Ciudad proveedor', alignRight: false },
+  { id: 'address', label: 'Dirección', alignRight: false },
+  { id: 'phone', label: 'Teléfono', alignRight: false }
 ];
 
 // ----------------------------------------------------------------------
@@ -71,13 +69,13 @@ function applySortFilter(array, comparator, query) {
   if (query) {
     return filter(
       array,
-      (_user) => _user.nombre_usuario.toLowerCase().indexOf(query.toLowerCase()) !== -1
+      (_provider) => _provider.nombre_proveedor.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   }
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function User() {
+export default function Provider() {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
@@ -92,7 +90,7 @@ export default function User() {
         method: 'GET'
       };
 
-      fetch('https://ciclo3-mintic-back.herokuapp.com/usuarios/listar/', requestOptions)
+      fetch('https://ciclo3-mintic-back.herokuapp.com/proveedores/listar/', requestOptions)
         .then((res) => res.json())
         .then((result) => setUsuarios(result))
         .catch((error) => console.log('error', error));
@@ -157,11 +155,11 @@ export default function User() {
   const handleClose = () => setOpen(false);
 
   return (
-    <Page title="Usuarios | Proyecto MinTic">
+    <Page title="Proveedores | Proyecto MinTic">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Lista de Usuarios
+            Lista de Proveedores
           </Typography>
           <Button
             variant="contained"
@@ -170,10 +168,10 @@ export default function User() {
             to="#"
             startIcon={<Icon icon={plusFill} />}
           >
-            Crear usuarios
+            Crear Proveedor
           </Button>
           <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Agregar Usuario</DialogTitle>
+            <DialogTitle>Agregar Proveedor</DialogTitle>
             <DialogContent>
               <DialogContentText>
                 Para agregar un usuario diligencie todos los campos para poder enviar los datos de

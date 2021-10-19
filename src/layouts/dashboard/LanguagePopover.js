@@ -10,7 +10,7 @@ import MenuPopover from '../../components/MenuPopover';
 const LANGS = [
   {
     value: 'en',
-    label: 'English',
+    label: 'Español',
     icon: '/static/icons/ic_flag_en.svg'
   },
   {
