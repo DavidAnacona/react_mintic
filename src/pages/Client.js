@@ -34,11 +34,11 @@ import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dash
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Nombre usuario', alignRight: false },
+  { id: 'name', label: 'Nombre cliente', alignRight: false },
   { id: 'document', label: 'Cedula', alignRight: false },
   { id: 'email', label: 'Correo', alignRight: false },
-  { id: 'user', label: 'Usuario', alignRight: false },
-  { id: 'password', label: 'Contraseña', alignRight: false }
+  { id: 'address', label: 'Dirección', alignRight: false },
+  { id: 'phone', label: 'Teléfono', alignRight: false }
 ];
 
 // ----------------------------------------------------------------------
@@ -69,33 +69,33 @@ function applySortFilter(array, comparator, query) {
   if (query) {
     return filter(
       array,
-      (_user) => _user.nombre_usuario.toLowerCase().indexOf(query.toLowerCase()) !== -1
+      (_client) => _client.nombre_cliente.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   }
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function User() {
+export default function Client() {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [usuarios, setUsuarios] = useState([]);
+  const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
-    const users = () => {
+    const clients = () => {
       const requestOptions = {
         method: 'GET'
       };
 
-      fetch('https://ciclo3-mintic-back.herokuapp.com/usuarios/listar/', requestOptions)
+      fetch('https://ciclo3-mintic-back.herokuapp.com/clientes/listar', requestOptions)
         .then((res) => res.json())
-        .then((result) => setUsuarios(result))
+        .then((result) => setClientes(result))
         .catch((error) => console.log('error', error));
     };
-    users();
+    clients();
   }, []);
 
   const handleRequestSort = (property) => {
@@ -106,7 +106,7 @@ export default function User() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = usuarios.map((n) => n.nombre_usuario);
+      const newSelecteds = clientes.map((n) => n.nombre_cliente);
       setSelected(newSelecteds);
       return;
     }
@@ -144,22 +144,22 @@ export default function User() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - usuarios.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - clientes.length) : 0;
 
-  const filteredUsers = applySortFilter(usuarios, getComparator(order, orderBy), filterName);
+  const filteredClients = applySortFilter(clientes, getComparator(order, orderBy), filterName);
 
-  const isUserNotFound = filteredUsers.length === 0;
+  const isClientNotFound = filteredClients.length === 0;
 
   const [open, setOpen] = useState(false);
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   return (
-    <Page title="Usuarios | Proyecto MinTic">
+    <Page title="Clientes | Proyecto MinTic">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Lista de Usuarios
+            Lista de Clientes
           </Typography>
           <Button
             variant="contained"
@@ -168,22 +168,22 @@ export default function User() {
             to="#"
             startIcon={<Icon icon={plusFill} />}
           >
-            Crear usuarios
+            Crear cliente
           </Button>
           <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Agregar Usuario</DialogTitle>
+            <DialogTitle>Agregar cliente</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Para agregar un usuario diligencie todos los campos para poder enviar los datos de
+                Para agregar un cliente diligencie todos los campos para poder enviar los datos de
                 manera correcta
               </DialogContentText>
               <Formik
                 initialValues={{
-                  cedula_usuario: '',
-                  email_usuario: '',
-                  nombre_usuario: '',
-                  password: '',
-                  usuario: ''
+                  cedula_cliente: '',
+                  email_cliente: '',
+                  nombre_cliente: '',
+                  direccion_cliente: '',
+                  telefono_cliente: ''
                 }}
                 onSubmit={(values, { setSubmitting }) => {
                   const myHeaders = new Headers();
@@ -201,7 +201,7 @@ export default function User() {
                   };
 
                   fetch(
-                    'https://ciclo3-mintic-back.herokuapp.com/usuarios/guardar/',
+                    'https://ciclo3-mintic-back.herokuapp.com/clientes/guardar/',
                     requestOptions
                   )
                     .then((response) => response.text())
@@ -215,7 +215,7 @@ export default function User() {
                       <Field
                         as={TextField}
                         fullWidth
-                        name="cedula_usuario"
+                        name="cedula_cliente"
                         type="number"
                         label="Cedula"
                       />
@@ -224,8 +224,8 @@ export default function User() {
                         as={TextField}
                         fullWidth
                         type="text"
-                        label="Nombre usuario"
-                        name="nombre_usuario"
+                        label="Nombre cliente"
+                        name="nombre_cliente"
                       />
                       <br />
                       <Field
@@ -233,17 +233,23 @@ export default function User() {
                         fullWidth
                         type="email"
                         label="Email"
-                        name="email_usuario"
+                        name="email_cliente"
                       />
-                      <br />
-                      <Field as={TextField} fullWidth type="text" label="Usuario" name="usuario" />
                       <br />
                       <Field
                         as={TextField}
                         fullWidth
-                        type="password"
-                        label="Contraseña"
-                        name="password"
+                        type="text"
+                        label="Dirección"
+                        name="direccion_cliente"
+                      />
+                      <br />
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        type="text"
+                        label="Teléfono"
+                        name="telefono_cliente"
                       />
                     </Stack>
                     <Stack gap={2} mt={3}>
@@ -279,18 +285,23 @@ export default function User() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={usuarios.length}
+                  rowCount={clientes.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers
+                  {filteredClients
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => {
-                      const { nombre_usuario, email_usuario, password, usuario, cedula_usuario } =
-                        row;
-                      const isItemSelected = selected.indexOf(nombre_usuario) !== -1;
+                      const {
+                        nombre_cliente,
+                        email_cliente,
+                        telefono_cliente,
+                        direccion_cliente,
+                        cedula_cliente
+                      } = row;
+                      const isItemSelected = selected.indexOf(nombre_cliente) !== -1;
 
                       return (
                         <TableRow
@@ -304,27 +315,27 @@ export default function User() {
                           <TableCell padding="checkbox">
                             <Checkbox
                               checked={isItemSelected}
-                              onChange={(event) => handleClick(event, nombre_usuario)}
+                              onChange={(event) => handleClick(event, nombre_cliente)}
                             />
                           </TableCell>
                           <TableCell component="th" scope="row" padding="none">
                             <Stack direction="row" alignItems="center" spacing={2}>
                               <Avatar
-                                alt={nombre_usuario}
-                                src="https://randomuser.me/api/portraits/women/28.jpg"
+                                alt={nombre_cliente}
+                                src="https://randomuser.me/api/portraits/men/20.jpg"
                               />
                               <Typography variant="subtitle2" noWrap>
-                                {nombre_usuario}
+                                {nombre_cliente}
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="left">{cedula_usuario}</TableCell>
-                          <TableCell align="left">{email_usuario}</TableCell>
-                          <TableCell align="left">{usuario}</TableCell>
-                          <TableCell align="left">{password}</TableCell>
+                          <TableCell align="left">{cedula_cliente}</TableCell>
+                          <TableCell align="left">{email_cliente}</TableCell>
+                          <TableCell align="left">{telefono_cliente}</TableCell>
+                          <TableCell align="left">{direccion_cliente}</TableCell>
                           <TableCell align="right">
                             <UserMoreMenu
-                              onEdit={() => alert(cedula_usuario)}
+                              onEdit={() => alert(cedula_cliente)}
                               onDelete={() => {
                                 const headers = new Headers();
 
@@ -337,7 +348,7 @@ export default function User() {
                                   headers: Headers
                                 };
                                 fetch(
-                                  `https://ciclo3-mintic-back.herokuapp.com/usuarios/eliminar/${cedula_usuario}`,
+                                  `https://ciclo3-mintic-back.herokuapp.com/clientes/eliminar/${cedula_cliente}`,
                                   requestOptions
                                 )
                                   .then((res) => res.text())
@@ -355,7 +366,7 @@ export default function User() {
                     </TableRow>
                   )}
                 </TableBody>
-                {isUserNotFound && (
+                {isClientNotFound && (
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
@@ -370,7 +381,7 @@ export default function User() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={usuarios.length}
+            count={clientes.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

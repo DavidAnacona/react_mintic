@@ -9,7 +9,8 @@ import DashboardApp from './pages/DashboardApp';
 import Products from './pages/Products';
 import Blog from './pages/Blog';
 import User from './pages/User';
-import Cliente from './pages/cliente';
+import Client from './pages/Client';
+import Provider from './pages/Provider';
 import NotFound from './pages/Page404';
 
 // ----------------------------------------------------------------------
@@ -25,7 +26,8 @@ export default function Router() {
         { path: 'user', element: <User /> },
         { path: 'products', element: <Products /> },
         { path: 'blog', element: <Blog /> },
-        { path: 'cliente', element: <Cliente /> }
+        { path: 'client', element: <Client /> },
+        { path: 'provider', element: <Provider /> }
       ]
     },
     {

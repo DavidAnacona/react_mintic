@@ -17,6 +17,7 @@ import {
   TableContainer,
   TablePagination
 } from '@mui/material';
+
 // components
 import { useSnackbar } from 'notistack';
 import FormUser from '../components/_dashboard/user/FormUser';
@@ -24,6 +25,7 @@ import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
+
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
