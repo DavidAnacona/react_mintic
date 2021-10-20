@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { filter } from 'lodash';
+import { filter, forEachRight } from 'lodash';
 import { Icon } from '@iconify/react';
 import { useEffect, useState } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
@@ -31,14 +31,15 @@ import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
+import { useSnackbar } from 'notistack';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Nombre cliente', alignRight: false },
   { id: 'document', label: 'Cedula', alignRight: false },
   { id: 'email', label: 'Correo', alignRight: false },
-  { id: 'address', label: 'Dirección', alignRight: false },
-  { id: 'phone', label: 'Teléfono', alignRight: false }
+  { id: 'phone', label: 'Teléfono', alignRight: false },
+  { id: 'address', label: 'Dirección', alignRight: false }
 ];
 
 // ----------------------------------------------------------------------
@@ -78,11 +79,13 @@ function applySortFilter(array, comparator, query) {
 export default function Client() {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
-  const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [clientes, setClientes] = useState([]);
+
+  const { enqueueSnackbar .
+  } = useSnackbar();
 
   useEffect(() => {
     const clients = () => {
@@ -104,33 +107,6 @@ export default function Client() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = clientes.map((n) => n.nombre_cliente);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const handleChangePage = (newPage) => {
     setPage(newPage);
   };
@@ -150,10 +126,56 @@ export default function Client() {
 
   const isClientNotFound = filteredClients.length === 0;
 
-  const [open, setOpen] = useState(false);
-  const handleClickOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  // Modals
+  const [openCreate, setOpenCreate] = useState(false);
+  const handleOpenCreate = () => setOpenCreate(true);
+  const handleCloseCreate = () => setOpenCreate(false);
 
+  const [openEdit, setOpenEdit] = useState(false);
+  const handleOpenEdit = () => setOpenEdit(true);
+  const handleCloseEdit = () => setOpenEdit(false);
+
+  const myHeaders = new Headers();
+  myHeaders.append('Content-Type', 'application/json');
+
+  const handleCreateClient = async (values) => {
+    const raw = JSON.stringify({
+      ...values
+    });
+
+    const requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+
+    try{
+      const res = await fetch(
+        'https://ciclo3-mintic-back.herokuapp.com/clientes/guardar/',
+        requestOptions
+      );
+      const data = await res.json ();
+
+      if (data.mensaje === 'Ya existe un cliente con la cedula ingresa'){
+        enqueueSnackbar(data.mensaje, {
+          variant: 'error'
+        })
+        handleCloseCreate();
+      }else{
+        setClientes([...clientes, values]);
+        handleCloseCreate();
+        enqueueSnackbar(data.mensaje, {
+          variant: 'sucess'
+        });
+      }
+    }catch(err){
+      enqueueSnackbar('Cliente NO creado', {
+        variant: 'error'
+      });
+      console.log(err);
+    }
+  }
   return (
     <Page title="Clientes | Proyecto MinTic">
       <Container>
