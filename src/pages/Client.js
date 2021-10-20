@@ -1,37 +1,31 @@
 /* eslint-disable camelcase */
-import { filter, forEachRight } from 'lodash';
+import { filter } from 'lodash';
 import { Icon } from '@iconify/react';
 import { useEffect, useState } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
-import { Link as RouterLink } from 'react-router-dom';
 // material
 import {
   Card,
   Table,
   Stack,
-  Avatar,
   Button,
-  Checkbox,
   TableRow,
   TableBody,
   TableCell,
   Container,
   Typography,
   TableContainer,
-  TablePagination,
-  Dialog,
-  DialogTitle,
-  DialogContentText,
-  DialogContent,
-  TextField
+  TablePagination
 } from '@mui/material';
+
 // components
-import { Formik, Form, Field } from 'formik';
+import { useSnackbar } from 'notistack';
+import FormUser from '../components/_dashboard/client/FormClient';
 import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
-import { useSnackbar } from 'notistack';
+
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -70,35 +64,34 @@ function applySortFilter(array, comparator, query) {
   if (query) {
     return filter(
       array,
-      (_client) => _client.nombre_cliente.toLowerCase().indexOf(query.toLowerCase()) !== -1
+      (_user) => _user.nombre_cliente.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   }
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function Client() {
+export default function User() {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [clientes, setClientes] = useState([]);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [usuarios, setUsuarios] = useState([]);
 
-  const { enqueueSnackbar .
-  } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
-    const clients = () => {
+    const users = () => {
       const requestOptions = {
         method: 'GET'
       };
 
-      fetch('https://ciclo3-mintic-back.herokuapp.com/clientes/listar', requestOptions)
+      fetch('https://ciclo3-mintic-back.herokuapp.com/clientes/listar/', requestOptions)
         .then((res) => res.json())
-        .then((result) => setClientes(result))
+        .then((result) => setUsuarios(result))
         .catch((error) => console.log('error', error));
     };
-    clients();
+    users();
   }, []);
 
   const handleRequestSort = (property) => {
@@ -120,11 +113,11 @@ export default function Client() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - clientes.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - usuarios.length) : 0;
 
-  const filteredClients = applySortFilter(clientes, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(usuarios, getComparator(order, orderBy), filterName);
 
-  const isClientNotFound = filteredClients.length === 0;
+  const isUserNotFound = filteredUsers.length === 0;
 
   // Modals
   const [openCreate, setOpenCreate] = useState(false);
@@ -135,10 +128,13 @@ export default function Client() {
   const handleOpenEdit = () => setOpenEdit(true);
   const handleCloseEdit = () => setOpenEdit(false);
 
+  const [editData, setEditData] = useState([]);
+
+  // CRUD methods
   const myHeaders = new Headers();
   myHeaders.append('Content-Type', 'application/json');
 
-  const handleCreateClient = async (values) => {
+  const handleCreateUser = async (values) => {
     const raw = JSON.stringify({
       ...values
     });
@@ -150,32 +146,109 @@ export default function Client() {
       redirect: 'follow'
     };
 
-    try{
+    try {
       const res = await fetch(
         'https://ciclo3-mintic-back.herokuapp.com/clientes/guardar/',
         requestOptions
       );
-      const data = await res.json ();
+      const data = await res.json();
 
-      if (data.mensaje === 'Ya existe un cliente con la cedula ingresa'){
+      if (data.mensaje === 'Ya existe un cliente con la cedula ingresada') {
         enqueueSnackbar(data.mensaje, {
           variant: 'error'
-        })
+        });
         handleCloseCreate();
-      }else{
-        setClientes([...clientes, values]);
+      } else {
+        setUsuarios([...usuarios, values]);
         handleCloseCreate();
         enqueueSnackbar(data.mensaje, {
-          variant: 'sucess'
+          variant: 'success'
         });
       }
-    }catch(err){
+    } catch (err) {
       enqueueSnackbar('Cliente NO creado', {
         variant: 'error'
       });
-      console.log(err);
+      console.log('error', err);
     }
-  }
+  };
+  const handleEditUser = (values) => {
+    const raw = JSON.stringify({
+      ...values
+    });
+
+    const requestOptions = {
+      headers: myHeaders,
+      method: 'PUT',
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch(
+      `https://ciclo3-mintic-back.herokuapp.com/clientes/actualizar/${values?.cedula_cliente}`,
+      requestOptions
+    )
+      .then((response) => response.text())
+      .then(() => {
+        enqueueSnackbar('Cliente editado con exito', {
+          variant: 'success'
+        });
+        setUsuarios([
+          ...usuarios.filter((i) => i.cedula_cliente !== values.cedula_cliente),
+          values
+        ]);
+        handleCloseEdit();
+      })
+      .catch((error) => {
+        enqueueSnackbar('Cliente NO editado', {
+          variant: 'error'
+        });
+        console.log('error', error);
+      });
+  };
+  const handleDetailUser = (cedula_cliente) => {
+    const requestOptions = {
+      method: 'GET'
+    };
+    fetch(
+      `https://ciclo3-mintic-back.herokuapp.com/clientes/detalle/${cedula_cliente}`,
+      requestOptions
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        setEditData(res);
+        handleOpenEdit();
+      })
+      .catch((err) => {
+        enqueueSnackbar('NO se puede listar informacion del cliente', {
+          variant: 'error'
+        });
+        console.log(err);
+      });
+  };
+  const handleDeleteUser = (cedula_cliente) => {
+    const requestOptions = {
+      method: 'DELETE'
+    };
+    fetch(
+      `https://ciclo3-mintic-back.herokuapp.com/clientes/eliminar/${cedula_cliente}`,
+      requestOptions
+    )
+      .then((res) => res.text())
+      .then(() => {
+        enqueueSnackbar('Cliente eliminado con exito', {
+          variant: 'success'
+        });
+        setUsuarios(usuarios.filter((i) => i.cedula_cliente !== cedula_cliente));
+      })
+      .catch((err) => {
+        enqueueSnackbar('Cliente NO eliminado', {
+          variant: 'error'
+        });
+        console.log(err);
+      });
+  };
+
   return (
     <Page title="Clientes | Proyecto MinTic">
       <Container>
@@ -185,121 +258,15 @@ export default function Client() {
           </Typography>
           <Button
             variant="contained"
-            component={RouterLink}
-            onClick={handleClickOpen}
-            to="#"
+            onClick={handleOpenCreate}
             startIcon={<Icon icon={plusFill} />}
           >
             Crear cliente
           </Button>
-          <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Agregar cliente</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Para agregar un cliente diligencie todos los campos para poder enviar los datos de
-                manera correcta
-              </DialogContentText>
-              <Formik
-                initialValues={{
-                  cedula_cliente: '',
-                  email_cliente: '',
-                  nombre_cliente: '',
-                  direccion_cliente: '',
-                  telefono_cliente: ''
-                }}
-                onSubmit={(values, { setSubmitting }) => {
-                  const myHeaders = new Headers();
-                  myHeaders.append('Content-Type', 'application/json');
-
-                  const raw = JSON.stringify({
-                    ...values
-                  });
-
-                  const requestOptions = {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: raw,
-                    redirect: 'follow'
-                  };
-
-                  fetch(
-                    'https://ciclo3-mintic-back.herokuapp.com/clientes/guardar/',
-                    requestOptions
-                  )
-                    .then((response) => response.text())
-                    .then((result) => console.log(result))
-                    .catch((error) => console.log('error', error));
-                }}
-              >
-                {({ submitForm, isSubmitting }) => (
-                  <Form>
-                    <Stack mt={2}>
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        name="cedula_cliente"
-                        type="number"
-                        label="Cedula"
-                      />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="text"
-                        label="Nombre cliente"
-                        name="nombre_cliente"
-                      />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="email"
-                        label="Email"
-                        name="email_cliente"
-                      />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="text"
-                        label="Dirección"
-                        name="direccion_cliente"
-                      />
-                      <br />
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        type="text"
-                        label="Teléfono"
-                        name="telefono_cliente"
-                      />
-                    </Stack>
-                    <Stack gap={2} mt={3}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        disabled={isSubmitting}
-                        onClick={submitForm}
-                      >
-                        Agregar
-                      </Button>
-                      <Button fullWidth variant="contained" color="error" onClick={handleClose}>
-                        Cancelar
-                      </Button>
-                    </Stack>
-                  </Form>
-                )}
-              </Formik>
-            </DialogContent>
-          </Dialog>
+          <FormUser open={openCreate} onClose={handleCloseCreate} onSubmit={handleCreateUser} />
         </Stack>
-
         <Card>
-          <UserListToolbar
-            numSelected={selected.length}
-            filterName={filterName}
-            onFilterName={handleFilterByName}
-          />
+          <UserListToolbar filterName={filterName} onFilterName={handleFilterByName} />
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
@@ -307,45 +274,25 @@ export default function Client() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={clientes.length}
-                  numSelected={selected.length}
+                  rowCount={usuarios.length}
                   onRequestSort={handleRequestSort}
-                  onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredClients
+                  {filteredUsers
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => {
                       const {
                         nombre_cliente,
                         email_cliente,
-                        telefono_cliente,
                         direccion_cliente,
+                        telefono_cliente,
                         cedula_cliente
                       } = row;
-                      const isItemSelected = selected.indexOf(nombre_cliente) !== -1;
 
                       return (
-                        <TableRow
-                          hover
-                          key={index}
-                          tabIndex={-1}
-                          role="checkbox"
-                          selected={isItemSelected}
-                          aria-checked={isItemSelected}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={isItemSelected}
-                              onChange={(event) => handleClick(event, nombre_cliente)}
-                            />
-                          </TableCell>
+                        <TableRow hover key={index} tabIndex={-1}>
                           <TableCell component="th" scope="row" padding="none">
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar
-                                alt={nombre_cliente}
-                                src="https://randomuser.me/api/portraits/men/20.jpg"
-                              />
+                            <Stack direction="row" alignItems="center" spacing={2} mx={2}>
                               <Typography variant="subtitle2" noWrap>
                                 {nombre_cliente}
                               </Typography>
@@ -356,27 +303,15 @@ export default function Client() {
                           <TableCell align="left">{telefono_cliente}</TableCell>
                           <TableCell align="left">{direccion_cliente}</TableCell>
                           <TableCell align="right">
+                            <FormUser
+                              open={openEdit}
+                              onClose={handleCloseEdit}
+                              onSubmit={handleEditUser}
+                              initialValues={editData}
+                            />
                             <UserMoreMenu
-                              onEdit={() => alert(cedula_cliente)}
-                              onDelete={() => {
-                                const headers = new Headers();
-
-                                headers.append('Content-Type', 'application/json');
-                                headers.append('Accept', 'application/json');
-
-                                headers.append('Origin', 'http://localhost:3000');
-                                const requestOptions = {
-                                  method: 'DELETE',
-                                  headers: Headers
-                                };
-                                fetch(
-                                  `https://ciclo3-mintic-back.herokuapp.com/clientes/eliminar/${cedula_cliente}`,
-                                  requestOptions
-                                )
-                                  .then((res) => res.text())
-                                  .then((res) => console.log(res))
-                                  .catch((err) => console.log(err));
-                              }}
+                              onEdit={() => handleDetailUser(cedula_cliente)}
+                              onDelete={() => handleDeleteUser(cedula_cliente)}
                             />
                           </TableCell>
                         </TableRow>
@@ -388,7 +323,7 @@ export default function Client() {
                     </TableRow>
                   )}
                 </TableBody>
-                {isClientNotFound && (
+                {isUserNotFound && (
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
@@ -403,7 +338,7 @@ export default function Client() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={clientes.length}
+            count={usuarios.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
