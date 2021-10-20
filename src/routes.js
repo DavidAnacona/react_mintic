@@ -11,6 +11,7 @@ import Blog from './pages/Blog';
 import User from './pages/User';
 import Client from './pages/Client';
 import Provider from './pages/Provider';
+import Product from './pages/Product';
 import NotFound from './pages/Page404';
 
 // ----------------------------------------------------------------------
@@ -27,7 +28,8 @@ export default function Router() {
         { path: 'products', element: <Products /> },
         { path: 'blog', element: <Blog /> },
         { path: 'client', element: <Client /> },
-        { path: 'provider', element: <Provider /> }
+        { path: 'provider', element: <Provider /> },
+        { path: 'product', element: <Product /> }
       ]
     },
     {
