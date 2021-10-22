@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
 import {
   Stack,
@@ -11,26 +10,27 @@ import {
 } from '@mui/material';
 // components
 import { Formik, Form, Field } from 'formik';
-import BasicSelect from './ListProvider';
-
+import ListClient from './ListClient';
+import ListUser from './ListUser';
+import DialogSelect from './FormProduct';
 // eslint-disable-next-line react/prop-types
-const FormProduct = ({ onClose, open, initialValues, onSubmit }) => (
+const FormProvider = ({ onClose, open, initialValues, onSubmit }) => (
   <Dialog open={open} onClose={onClose}>
-    <DialogTitle>{initialValues ? 'Editar Producto' : 'Agregar Producto'}</DialogTitle>
+    <DialogTitle>{initialValues ? 'Editar Venta' : 'Agregar Venta'}</DialogTitle>
     <DialogContent>
       <DialogContentText>
-        Para {initialValues ? ' editar ' : ' agregar '} un producto diligencie todos los campos para
+        Para {initialValues ? ' editar ' : ' agregar '} una venta diligencie todos los campos para
         poder enviar los datos de manera correcta
       </DialogContentText>
       <Formik
         initialValues={
           initialValues || {
-            codigo_producto: '',
-            nombre_producto: '',
-            nitproveedor: '',
-            precio_compra: '',
-            ivacompra: '',
-            precio_venta: ''
+            codigo_venta: '',
+            cedula_cliente: '',
+            cedula_usuario: '',
+            valor_venta: '',
+            ivaventa: '',
+            total_venta: ''
           }
         }
         onSubmit={(values, { resetForm }) => {
@@ -41,34 +41,17 @@ const FormProduct = ({ onClose, open, initialValues, onSubmit }) => (
         {({ submitForm, isSubmitting, resetForm, ...formik }) => (
           <Form>
             <Stack mt={2}>
-              <Field as={TextField} fullWidth name="codigo_producto" type="number" label="Codigo" />
+              <Field as={TextField} fullWidth name="codigo_venta" type="number" label="Codigo" />
               <br />
-              <Field
-                as={TextField}
-                fullWidth
-                type="text"
-                label="Nombre producto"
-                name="nombre_producto"
-              />
+              <ListClient formik={formik} />
               <br />
-              <BasicSelect formik={formik} />
-              {/* <Field as={TextField} fullWidth type="text" label="Proveedor" name="nitproveedor" /> */}
+              <ListUser formik={formik} />
               <br />
-              <Field
-                as={TextField}
-                fullWidth
-                type="text"
-                label="Precio compra"
-                name="precio_compra"
-              />
+              <DialogSelect formik={formik} />
               <br />
-              <Field
-                as={TextField}
-                fullWidth
-                type="text"
-                label="Precio venta"
-                name="precio_venta"
-              />
+              <Field as={TextField} fullWidth type="text" label="Valor venta" name="valor_venta" />
+              <br />
+              <Field as={TextField} fullWidth type="text" label="Total venta" name="total_venta" />
             </Stack>
             <Stack gap={2} mt={3}>
               <Button fullWidth variant="contained" disabled={isSubmitting} onClick={submitForm}>
@@ -93,4 +76,4 @@ const FormProduct = ({ onClose, open, initialValues, onSubmit }) => (
   </Dialog>
 );
 
-export default FormProduct;
+export default FormProvider;

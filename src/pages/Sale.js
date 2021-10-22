@@ -20,7 +20,7 @@ import {
 
 // components
 import { useSnackbar } from 'notistack';
-import FormUser from '../components/_dashboard/product/FormProduct';
+import FormUser from '../components/_dashboard/Sale/FormSale';
 import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
@@ -28,12 +28,12 @@ import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dash
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Nombre producto', alignRight: false },
-  { id: 'code', label: 'Codigo', alignRight: false },
-  { id: 'provider', label: 'Proveedor', alignRight: false },
-  { id: 'price', label: 'Precio compra', alignRight: false },
-  { id: 'iva', label: 'iva', alignRight: false },
-  { id: 'salePrice', label: 'Precio venta', alignRight: false }
+  { id: 'code_sale', label: 'Codigo venta', alignRight: false },
+  { id: 'document_client', label: 'Cedula cliente', alignRight: false },
+  { id: 'document_user', label: 'Cedula usuario', alignRight: false },
+  { id: 'value_sale', label: 'Valor venta', alignRight: false },
+  { id: 'iva', label: 'Iva venta', alignRight: false },
+  { id: 'total_sale', label: 'Total venta', alignRight: false }
 ];
 
 // ----------------------------------------------------------------------
@@ -86,7 +86,7 @@ export default function User() {
         method: 'GET'
       };
 
-      fetch('https://ciclo3-mintic-back.herokuapp.com/productos/listar/', requestOptions)
+      fetch('https://ciclo3-mintic-back.herokuapp.com/ventas/listar/', requestOptions)
         .then((res) => res.json())
         .then((result) => setUsuarios(result))
         .catch((error) => console.log('error', error));
@@ -147,13 +147,12 @@ export default function User() {
 
     try {
       const res = await fetch(
-        'https://ciclo3-mintic-back.herokuapp.com/productos/guardar/',
+        'https://ciclo3-mintic-back.herokuapp.com/ventas/guardar/',
         requestOptions
       );
-
       const data = await res.json();
 
-      if (data.mensaje === 'Ya existe un producto con el codigo ingresado') {
+      if (data.mensaje === 'Ya existe una venta con el codigo ingresado') {
         enqueueSnackbar(data.mensaje, {
           variant: 'error'
         });
@@ -166,7 +165,7 @@ export default function User() {
         });
       }
     } catch (err) {
-      enqueueSnackbar('Producto NO creado', {
+      enqueueSnackbar('Venta NO creado', {
         variant: 'error'
       });
       console.log('error', err);
@@ -185,62 +184,55 @@ export default function User() {
     };
 
     fetch(
-      `https://ciclo3-mintic-back.herokuapp.com/productos/actualizar/${values?.codigo_producto}`,
+      `https://ciclo3-mintic-back.herokuapp.com/ventas/actualizar/${values?.codigo_venta}`,
       requestOptions
     )
       .then((response) => response.text())
       .then(() => {
-        enqueueSnackbar('Producto editado con exito', {
+        enqueueSnackbar('Venta editada con exito', {
           variant: 'success'
         });
-        setUsuarios([
-          ...usuarios.filter((i) => i.codigo_producto !== values.codigo_producto),
-          values
-        ]);
+        setUsuarios([...usuarios.filter((i) => i.codigo_venta !== values.codigo_venta), values]);
         handleCloseEdit();
       })
       .catch((error) => {
-        enqueueSnackbar('Producto NO editado', {
+        enqueueSnackbar('Venta NO editada', {
           variant: 'error'
         });
         console.log('error', error);
       });
   };
-
-  const handleDetailUser = (codigo_producto) => {
+  const handleDetailUser = (codigo_venta) => {
     const requestOptions = {
       method: 'GET'
     };
-    fetch(
-      `https://ciclo3-mintic-back.herokuapp.com/productos/detalle/${codigo_producto}`,
-      requestOptions
-    )
+    fetch(`https://ciclo3-mintic-back.herokuapp.com/ventas/detalle/${codigo_venta}`, requestOptions)
       .then((res) => res.json())
       .then((res) => {
         setEditData(res);
         handleOpenEdit();
       })
       .catch((err) => {
-        enqueueSnackbar('NO se puede listar informacion del producto', {
+        enqueueSnackbar('NO se puede listar informacion de la venta', {
           variant: 'error'
         });
         console.log(err);
       });
   };
-  const handleDeleteUser = (codigo_producto) => {
+  const handleDeleteUser = (codigo_venta) => {
     const requestOptions = {
       method: 'DELETE'
     };
     fetch(
-      `https://ciclo3-mintic-back.herokuapp.com/productos/eliminar/${codigo_producto}`,
+      `https://ciclo3-mintic-back.herokuapp.com/ventas/eliminar/${codigo_venta}`,
       requestOptions
     )
       .then((res) => res.text())
       .then(() => {
-        enqueueSnackbar('Producto eliminado con exito', {
+        enqueueSnackbar('Proveedor eliminado con exito', {
           variant: 'success'
         });
-        setUsuarios(usuarios.filter((i) => i.codigo_producto !== codigo_producto));
+        setUsuarios(usuarios.filter((i) => i.codigo_venta !== codigo_venta));
       })
       .catch((err) => {
         enqueueSnackbar('Producto NO eliminado', {
@@ -251,18 +243,18 @@ export default function User() {
   };
 
   return (
-    <Page title="Productos | Proyecto MinTic">
+    <Page title="Ventas | Proyecto MinTic">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Lista de Productos
+            Lista de Ventas
           </Typography>
           <Button
             variant="contained"
             onClick={handleOpenCreate}
             startIcon={<Icon icon={plusFill} />}
           >
-            Crear producto
+            Crear venta
           </Button>
           <FormUser open={openCreate} onClose={handleCloseCreate} onSubmit={handleCreateUser} />
         </Stack>
@@ -283,12 +275,12 @@ export default function User() {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => {
                       const {
-                        codigo_producto,
-                        nombre_producto,
-                        nitproveedor,
-                        precio_compra,
-                        ivacompra,
-                        precio_venta
+                        codigo_venta,
+                        cedula_cliente,
+                        cedula_usuario,
+                        valor_venta,
+                        ivaventa,
+                        total_venta
                       } = row;
 
                       return (
@@ -296,15 +288,15 @@ export default function User() {
                           <TableCell component="th" scope="row" padding="none">
                             <Stack direction="row" alignItems="center" spacing={2} mx={2}>
                               <Typography variant="subtitle2" noWrap>
-                                {nombre_producto}
+                                {codigo_venta}
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="left">{codigo_producto}</TableCell>
-                          <TableCell align="left">{nitproveedor}</TableCell>
-                          <TableCell align="left">{precio_compra}</TableCell>
-                          <TableCell align="left">{ivacompra}</TableCell>
-                          <TableCell align="left">{precio_venta}</TableCell>
+                          <TableCell align="left">{cedula_cliente}</TableCell>
+                          <TableCell align="left">{cedula_usuario}</TableCell>
+                          <TableCell align="left">{total_venta}</TableCell>
+                          <TableCell align="left">{ivaventa}</TableCell>
+                          <TableCell align="left">{valor_venta}</TableCell>
                           <TableCell align="right">
                             <FormUser
                               open={openEdit}
@@ -313,8 +305,8 @@ export default function User() {
                               initialValues={editData}
                             />
                             <UserMoreMenu
-                              onEdit={() => handleDetailUser(codigo_producto)}
-                              onDelete={() => handleDeleteUser(codigo_producto)}
+                              onEdit={() => handleDetailUser(codigo_venta)}
+                              onDelete={() => handleDeleteUser(codigo_venta)}
                             />
                           </TableCell>
                         </TableRow>

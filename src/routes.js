@@ -11,6 +11,8 @@ import Blog from './pages/Blog';
 import User from './pages/User';
 import Client from './pages/Client';
 import Provider from './pages/Provider';
+import Sale from './pages/Sale';
+import DetailSale from './pages/detailSale';
 import Product from './pages/Product';
 import NotFound from './pages/Page404';
 
@@ -29,7 +31,9 @@ export default function Router() {
         { path: 'blog', element: <Blog /> },
         { path: 'client', element: <Client /> },
         { path: 'provider', element: <Provider /> },
-        { path: 'product', element: <Product /> }
+        { path: 'product', element: <Product /> },
+        { path: 'sale', element: <Sale /> },
+        { path: 'detail', element: <DetailSale /> }
       ]
     },
     {

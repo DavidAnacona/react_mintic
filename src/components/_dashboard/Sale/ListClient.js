@@ -5,42 +5,42 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 
-export default function BasicSelect({ formik }) {
-  const [provider, setProvider] = useState([]);
+export default function ListClient({ formik }) {
+  const [client, setClient] = useState([]);
 
   useEffect(() => {
-    const providers = () => {
+    const clients = () => {
       const requestOptions = {
         method: 'GET'
       };
 
-      fetch('https://ciclo3-mintic-back.herokuapp.com/proveedores/listar/', requestOptions)
+      fetch('https://ciclo3-mintic-back.herokuapp.com/clientes/listar/', requestOptions)
         .then((res) => res.json())
         .then((result) =>
-          setProvider(
+          setClient(
             result.map((i) => ({
-              name: i?.nombre_proveedor,
-              id: i?.nitproveedor
+              name: i?.nombre_cliente,
+              id: i?.cedula_cliente
             }))
           )
         )
         .catch((error) => console.log('error', error));
     };
-    providers();
+    clients();
   }, []);
   return (
     <Box sx={{ minWidth: 120 }}>
       <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label">Proveedor</InputLabel>
+        <InputLabel id="demo-simple-select-label">Cliente</InputLabel>
         <Select
           labelId="demo-simple-select-label"
           id="demo-simple-select"
-          value={formik?.value?.nitproveedor}
-          label="Proveedor"
+          value={formik?.value?.cedula_cliente}
+          label="Cliente"
           onChange={formik?.handleChange}
-          name="nitproveedor"
+          name="cedula_cliente"
         >
-          {provider.map((i) => (
+          {client.map((i) => (
             <MenuItem key={i.id} value={i.id}>
               {i.name}
             </MenuItem>

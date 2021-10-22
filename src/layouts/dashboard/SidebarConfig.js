@@ -1,11 +1,11 @@
 import { Icon } from '@iconify/react';
 import pieChart2Fill from '@iconify/icons-eva/pie-chart-2-fill';
-import peopleFill from '@iconify/icons-eva/people-fill';
+import peopleFill from '@iconify/icons-eva/flag-outline';
 import shoppingBagFill from '@iconify/icons-eva/shopping-bag-fill';
 import fileTextFill from '@iconify/icons-eva/file-text-fill';
-/* import lockFill from '@iconify/icons-eva/lock-fill'; */
+import lockFill from '@iconify/icons-eva/lock-fill';
 import personAddFill from '@iconify/icons-eva/person-add-fill';
-/* import alertTriangleFill from '@iconify/icons-eva/alert-triangle-fill'; */
+import alertTriangleFill from '@iconify/icons-eva/alert-triangle-fill';
 
 // ----------------------------------------------------------------------
 
@@ -36,19 +36,17 @@ const sidebarConfig = [
     title: 'Productos',
     path: '/dashboard/product',
     icon: getIcon(shoppingBagFill)
-  }
-  /*
-  lockFill
-  {
-    title: 'register',
-    path: '/register',
-    icon: getIcon(personAddFill)
   },
   {
-    title: 'Not found',
-    path: '/404',
+    title: 'Ventas',
+    path: '/dashboard/sale',
+    icon: getIcon(lockFill)
+  },
+  {
+    title: 'Detalle venta',
+    path: '/dashboard/detail',
     icon: getIcon(alertTriangleFill)
-  } */
+  }
 ];
 
 export default sidebarConfig;
