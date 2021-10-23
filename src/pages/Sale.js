@@ -187,14 +187,15 @@ export default function User() {
       `https://ciclo3-mintic-back.herokuapp.com/ventas/actualizar/${values?.codigo_venta}`,
       requestOptions
     )
-      .then((response) => response.text())
-      .then(() => {
-        enqueueSnackbar('Venta editada con exito', {
-          variant: 'success'
-        });
-        setUsuarios([...usuarios.filter((i) => i.codigo_venta !== values.codigo_venta), values]);
-        handleCloseEdit();
-      })
+      .then((response) =>
+        response.text().then(() => {
+          enqueueSnackbar('Venta editada con exito', {
+            variant: 'success'
+          });
+          setUsuarios([...usuarios.filter((i) => i.codigo_venta !== values.codigo_venta), values]);
+          handleCloseEdit();
+        })
+      )
       .catch((error) => {
         enqueueSnackbar('Venta NO editada', {
           variant: 'error'
@@ -207,11 +208,12 @@ export default function User() {
       method: 'GET'
     };
     fetch(`https://ciclo3-mintic-back.herokuapp.com/ventas/detalle/${codigo_venta}`, requestOptions)
-      .then((res) => res.json())
-      .then((res) => {
-        setEditData(res);
-        handleOpenEdit();
-      })
+      .then((res) =>
+        res.json().then((res) => {
+          setEditData(res);
+          handleOpenEdit();
+        })
+      )
       .catch((err) => {
         enqueueSnackbar('NO se puede listar informacion de la venta', {
           variant: 'error'
@@ -227,13 +229,14 @@ export default function User() {
       `https://ciclo3-mintic-back.herokuapp.com/ventas/eliminar/${codigo_venta}`,
       requestOptions
     )
-      .then((res) => res.text())
-      .then(() => {
-        enqueueSnackbar('Proveedor eliminado con exito', {
-          variant: 'success'
-        });
-        setUsuarios(usuarios.filter((i) => i.codigo_venta !== codigo_venta));
-      })
+      .then((res) =>
+        res.text().then(() => {
+          enqueueSnackbar('Proveedor eliminado con exito', {
+            variant: 'success'
+          });
+          setUsuarios(usuarios.filter((i) => i.codigo_venta !== codigo_venta));
+        })
+      )
       .catch((err) => {
         enqueueSnackbar('Producto NO eliminado', {
           variant: 'error'
