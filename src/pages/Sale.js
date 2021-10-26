@@ -25,7 +25,7 @@ import Page from '../components/Page';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
-// ----------------------------------------------------------------------
+//----------------------------------------------------------------------
 
 const TABLE_HEAD = [
   { id: 'code_sale', label: 'Codigo venta', alignRight: false },
@@ -133,9 +133,10 @@ export default function User() {
   const myHeaders = new Headers();
   myHeaders.append('Content-Type', 'application/json');
 
-  const handleCreateUser = async (values) => {
+  const handleCreateUser = async (values, total_venta, listProduct) => {
     const raw = JSON.stringify({
-      ...values
+      ...values,
+      total_venta
     });
 
     const requestOptions = {
@@ -144,14 +145,26 @@ export default function User() {
       body: raw,
       redirect: 'follow'
     };
-
     try {
       const res = await fetch(
         'https://ciclo3-mintic-back.herokuapp.com/ventas/guardar/',
         requestOptions
       );
       const data = await res.json();
-
+      listProduct.map(async (i) => {
+        const raw2 = JSON.stringify({
+          codigo_detalle_venta: values.codigo_venta * Math.floor(Math.random() * (100 - 1 + 1) + 1),
+          cantidad_producto: i.cant,
+          codigo_producto: i.id,
+          nombre_producto: i.name,
+          codigo_venta: values.codigo_venta,
+          valor_venta: i.precioTotal
+        });
+        const res2 = await fetch('https://ciclo3-mintic-back.herokuapp.com/detalleVenta/guardar/', {
+          ...requestOptions,
+          body: raw2
+        });
+      });
       if (data.mensaje === 'Ya existe una venta con el codigo ingresado') {
         enqueueSnackbar(data.mensaje, {
           variant: 'error'
@@ -231,14 +244,14 @@ export default function User() {
     )
       .then((res) =>
         res.text().then(() => {
-          enqueueSnackbar('Proveedor eliminado con exito', {
+          enqueueSnackbar('Venta eliminada con exito', {
             variant: 'success'
           });
           setUsuarios(usuarios.filter((i) => i.codigo_venta !== codigo_venta));
         })
       )
       .catch((err) => {
-        enqueueSnackbar('Producto NO eliminado', {
+        enqueueSnackbar('Venta NO eliminada', {
           variant: 'error'
         });
         console.log(err);
@@ -297,9 +310,9 @@ export default function User() {
                           </TableCell>
                           <TableCell align="left">{cedula_cliente}</TableCell>
                           <TableCell align="left">{cedula_usuario}</TableCell>
-                          <TableCell align="left">{total_venta}</TableCell>
-                          <TableCell align="left">{ivaventa}</TableCell>
                           <TableCell align="left">{valor_venta}</TableCell>
+                          <TableCell align="left">{ivaventa}</TableCell>
+                          <TableCell align="left">{total_venta}</TableCell>
                           <TableCell align="right">
                             <FormUser
                               open={openEdit}

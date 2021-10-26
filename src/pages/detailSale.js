@@ -32,6 +32,7 @@ const TABLE_HEAD = [
   { id: 'code', label: 'Codigo detalle', alignRight: false },
   { id: 'code_sale', label: 'Codigo venta', alignRight: false },
   { id: 'code_product', label: 'Codigo producto', alignRight: false },
+  { id: 'name_product', label: 'Nombre producto', alignRight: false },
   { id: 'amount', label: 'Cantidad producto', alignRight: false },
   { id: 'total_value', label: 'valor total', alignRight: false },
   { id: 'value_iva', label: 'Valor iva', alignRight: false },
@@ -286,6 +287,7 @@ export default function User() {
                       const {
                         codigo_detalle_venta,
                         codigo_producto,
+                        nombre_producto,
                         codigo_venta,
                         cantidad_producto,
                         valor_total,
@@ -304,6 +306,7 @@ export default function User() {
                           </TableCell>
                           <TableCell align="left">{codigo_venta}</TableCell>
                           <TableCell align="left">{codigo_producto}</TableCell>
+                          <TableCell align="left">{nombre_producto}</TableCell>
                           <TableCell align="left">{cantidad_producto}</TableCell>
                           <TableCell align="left">{valor_total}</TableCell>
                           <TableCell align="left">{valoriva}</TableCell>

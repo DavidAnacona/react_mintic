@@ -50,7 +50,6 @@ export default function DialogSelect({ listProduct, setListProduct, change }) {
   const handleChangeCant = (e) => {
     setCant(e.target.value);
   };
-
   const handleChange = (e) => {
     setValue(e.target.value);
     const filterProducts = product.filter((i) => i.id === parseInt(e.target.value, 10));
@@ -60,12 +59,10 @@ export default function DialogSelect({ listProduct, setListProduct, change }) {
   const addToList = () => {
     setListProduct([...listProduct, { id: product1.id, name: product1.name, cant, precioTotal }]);
     closeModal();
-    change();
   };
 
   const deleteToList = (i) => {
     setListProduct([...listProduct.filter((j) => j.id !== i.id)]);
-    change();
   };
 
   return (

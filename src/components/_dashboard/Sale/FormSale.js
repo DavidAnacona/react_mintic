@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 // components
 import { Formik, Form, Field } from 'formik';
+import { parse } from '@babel/core';
 import ListClient from './ListClient';
 import ListUser from './ListUser';
 import DialogSelect from './FormProduct';
@@ -18,11 +19,12 @@ import DialogSelect from './FormProduct';
 const FormProvider = ({ onClose, open, initialValues, onSubmit }) => {
   const [listProduct, setListProduct] = useState([]);
 
+  const total = listProduct.reduce((sum, value) => sum + value.precioTotal, 0);
+
   const cancel = (resetForm) => {
     onClose();
     resetForm();
   };
-
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>{initialValues ? 'Editar Venta' : 'Agregar Venta'}</DialogTitle>
@@ -37,14 +39,13 @@ const FormProvider = ({ onClose, open, initialValues, onSubmit }) => {
               codigo_venta: '',
               cedula_cliente: '',
               cedula_usuario: '',
-              valor_venta: '',
-              ivaventa: '',
               total_venta: ''
             }
           }
           onSubmit={(values, { resetForm }) => {
             resetForm();
-            onSubmit(values);
+            onSubmit(values, total, listProduct);
+            console.log(values);
           }}
         >
           {({ submitForm, isSubmitting, resetForm, ...formik }) => (
@@ -61,17 +62,11 @@ const FormProvider = ({ onClose, open, initialValues, onSubmit }) => {
                 <Field
                   as={TextField}
                   fullWidth
-                  type="text"
-                  label="Valor venta"
-                  name="valor_venta"
-                />
-                <br />
-                <Field
-                  as={TextField}
-                  fullWidth
-                  type="text"
-                  label="Total venta"
+                  value={total}
                   name="total_venta"
+                  type="number"
+                  label="Total venta"
+                  disabled
                 />
               </Stack>
               <Stack gap={2} mt={3}>
